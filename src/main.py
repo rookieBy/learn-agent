@@ -2,6 +2,7 @@
 """面试题分析Agent - 主入口"""
 import sys
 import os
+from datetime import datetime
 
 # 添加src到路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -20,6 +21,35 @@ load_dotenv()
 
 # 配置日志
 logger.add("logs/agent_{time}.log", rotation="1 day")
+
+# 会话记录文件路径 - 使用绝对路径
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SESSION_LOG_DIR = os.path.join(_PROJECT_ROOT, "data", "raw")
+SESSION_LOG_FILE = os.path.join(
+    SESSION_LOG_DIR,
+    f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+)
+
+
+def ensure_dir(path):
+    """确保目录存在"""
+    os.makedirs(path, exist_ok=True)
+
+
+def save_to_markdown(question: str, answer: str):
+    """保存问答到markdown文件"""
+    ensure_dir(SESSION_LOG_DIR)
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    with open(SESSION_LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"## {timestamp}\n\n")
+        f.write(f"**Q: {question}**\n\n")
+        f.write(f"**A:**\n\n{answer}\n\n")
+        f.write("---\n\n")
+
+    logger.info(f"已保存到: {SESSION_LOG_FILE}")
+
 
 def create_llm():
     """创建LLM实例 - 使用MiniMax API"""
@@ -41,11 +71,13 @@ def create_llm():
             temperature=0.7
         )
 
+
 def main():
     """主函数"""
     logger.info("启动面试题分析Agent")
     logger.info(f"使用模型: {ANTHROPIC_MODEL}")
     logger.info(f"API地址: {ANTHROPIC_BASE_URL}")
+    logger.info(f"会话记录将保存到: {SESSION_LOG_FILE}")
 
     # 初始化LLM
     llm = create_llm()
@@ -90,6 +122,7 @@ def main():
         except Exception as e:
             logger.error(f"运行错误: {e}")
             print(f"\n错误: {e}\n")
+
 
 if __name__ == "__main__":
     main()
