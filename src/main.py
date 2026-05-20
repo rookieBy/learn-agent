@@ -78,6 +78,10 @@ def main():
 
             print("\n思考中...")
             response = agent.run(question)
+
+            # 保存到markdown
+            save_to_markdown(question, response)
+
             print(f"\n{response}\n")
 
         except KeyboardInterrupt:
