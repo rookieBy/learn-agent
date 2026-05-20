@@ -92,11 +92,9 @@ RESPONSE: 你的回答
         messages = state["messages"]
         last_message = messages[-1].content
 
-        # 解析工具调用
         if "ACTION:" not in last_message:
             return {"messages": []}
 
-        # 提取工具名称和参数
         lines = last_message.split('\n')
         tool_name = None
         tool_input = None
@@ -107,15 +105,37 @@ RESPONSE: 你的回答
             if line.startswith("INPUT:"):
                 tool_input = line.replace("INPUT:", "").strip()
 
-        if tool_name and tool_name in self.tools:
-            tool = self.tools[tool_name]
-            result = tool.func(tool_input)
+        matched_tool = None
+        for name, tool in self.tools.items():
+            if (tool_name and name == tool_name) or \
+               (tool_name and ('搜索' in tool_name or 'search' in tool_name.lower() or 'search_all' in tool_name.lower())) or \
+               (tool_name and name.replace('_', '') == tool_name.replace('_', '').replace(' ', '')):
+                matched_tool = tool
+                tool_name = name
+                break
+
+        if matched_tool:
+            result = matched_tool.func(tool_input)
+
+            if isinstance(result, list):
+                formatted_results = []
+                for i, item in enumerate(result, 1):
+                    if isinstance(item, dict):
+                        title = item.get('title', 'N/A')
+                        url = item.get('url', 'N/A')
+                        source = item.get('source', 'Unknown')
+                        formatted_results.append(f"{i}. [{source}] {title}\n   URL: {url}")
+                    else:
+                        formatted_results.append(f"{i}. {item}")
+                result_text = "\n".join(formatted_results)
+            else:
+                result_text = str(result)
 
             return {
-                "messages": [HumanMessage(content=f"工具 {tool_name} 返回结果:\n{result}")]
+                "messages": [HumanMessage(content=f"工具 {tool_name} 返回结果:\n{result_text}")]
             }
 
-        return {"messages": [HumanMessage(content="工具不存在")]}
+        return {"messages": [HumanMessage(content=f"工具 '{tool_name}' 不存在，可用工具: {list(self.tools.keys())}")]}
 
     def run(self, input: str) -> str:
         """运行Agent"""

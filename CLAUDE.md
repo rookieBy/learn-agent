@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-`interview-agent` is a learning-driven AI Agent project for studying AI Agent development through building. It uses LangGraph's ReAct pattern (Reasoning + Acting) with MiniMax API (Claude-compatible).
+`learn-agent` is a learning-driven AI Agent project for studying AI Agent development through building. It uses LangGraph's ReAct pattern (Reasoning + Acting) with MiniMax API (Claude-compatible).
 
 ## Commands
 
